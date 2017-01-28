@@ -1,7 +1,6 @@
 module Main where
 
 import System.Environment
-import Lib (readExpr)
 import Parser (program, goal, action, character, parseFromFile)
 
 main :: IO ()
