@@ -1,0 +1,4 @@
+character RedSoldier {
+	goals: [KillEnemy],
+   actions: [Attack, LoadWeapon, DrawWeapon]
+}

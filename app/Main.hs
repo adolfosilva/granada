@@ -2,10 +2,10 @@ module Main where
 
 import System.Environment
 import Lib (readExpr)
-import Parser (goal, action, parseFromFile)
+import Parser (program, goal, action, character, parseFromFile)
 
 main :: IO ()
 main = do
    args <- getArgs
-   action <- parseFromFile goal (args !! 0)
-   print action
+   p <- parseFromFile program (args !! 0)
+   print p

@@ -1,0 +1,16 @@
+action Attack {
+	pre: {
+      hasWeapon: true
+   },
+   post: { enemyDamage: 10 }
+}
+
+goal KillEnemy {
+   enemyDead: true,
+   scoreBonus: 150
+}
+
+character RedSoldier {
+	goals: [KillEnemy],
+   actions: [Attack, LoadWeapon, DrawWeapon]
+}

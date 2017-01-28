@@ -66,6 +66,9 @@ comma = Parsec.char ','
 colon :: Parsec.Parsec String () Char
 colon = Parsec.char ':'
 
+trimmedP :: Parsec.Stream s m Char => Parsec.ParsecT s u m a -> Parsec.ParsecT s u m a
+trimmedP p = Parsec.spaces *> p <* Parsec.spaces
+
 braces :: Parsec.Stream s m Char => Parsec.ParsecT s u m a -> Parsec.ParsecT s u m a
 braces = Parsec.between (Parsec.string "{") (Parsec.string "}")
 
@@ -76,17 +79,17 @@ brackets :: Parsec.Stream s m Char => Parsec.ParsecT s u m a -> Parsec.ParsecT s
 brackets = Parsec.between (Parsec.string "[") (Parsec.string "]")
 
 -- |Parser for a possibly empty list of something.
-list :: Parsec.ParsecT String () Data.Functor.Identity.Identity a -> Parsec.ParsecT String () Data.Functor.Identity.Identity [a]
-list p = brackets (p `Parsec.sepEndBy` comma)
+list :: Parsec.Parsec String () a -> Parsec.Parsec String () [a]
+list p = brackets (p `Parsec.sepEndBy` (trimmedP comma))
 
 -- |Parser for a non-empty list of something.
-nonEmptyList :: Parsec.ParsecT String () Data.Functor.Identity.Identity a -> Parsec.ParsecT String () Data.Functor.Identity.Identity [a]
-nonEmptyList p = brackets (p `Parsec.sepEndBy1` comma)
+nonEmptyList :: Parsec.Parsec String () a -> Parsec.Parsec String () [a]
+nonEmptyList p = brackets (p `Parsec.sepEndBy1` (trimmedP comma))
 
-mapP :: Parsec.ParsecT String () Identity a -> Parsec.ParsecT String () Identity [a]
+mapP :: Parsec.Parsec String () a -> Parsec.Parsec String () [a]
 mapP p = braces (p `Parsec.sepEndBy` comma)
 
-var :: Parsec.ParsecT String u Identity [Char]
+var :: Parsec.Parsec String () String
 var = Parsec.many1 Parsec.letter
 
 -- |Parser for a dictItem.
@@ -124,7 +127,7 @@ action = do
    (pre, post) <- braces actionBody
    return $ Expr.Action name pre post
  
-actionBody :: Parsec.ParsecT String () Identity (Maybe (Map String Expr.Value), Map String Expr.Value)
+actionBody :: Parsec.Parsec String () (Maybe (Map String Expr.Value), Map String Expr.Value)
 actionBody = do
    Parsec.spaces
    pre <- Parsec.optionMaybe preconditions
@@ -146,29 +149,50 @@ goal = do
    dic <- dict
    return $ Expr.Goal name dic
 
-{--
+goals :: Parsec.ParsecT String () Identity [String]
+goals = Parsec.string "goals" *> Parsec.spaces *> colon *> Parsec.spaces *> nonEmptyList identifier
+
+actions :: Parsec.ParsecT String () Identity [String]
+actions = Parsec.string "actions" *> Parsec.spaces *> colon *> Parsec.spaces *> list identifier
+
+-- |Parser for a Character.
+character :: Parsec.Parsec String () Expr.Character
+character = do
+   _ <- Parsec.string "character"
+   Parsec.spaces
+   name <- identifier
+   Parsec.spaces
+   (gs, as) <- braces characterBody
+   return $ Expr.Character name gs as
+
+characterBody :: Parsec.Parsec String () ([String],[String])
+characterBody = do
+   Parsec.spaces
+   gs <- goals
+   Parsec.spaces
+   _ <- comma
+   Parsec.spaces
+   as <- actions
+   Parsec.spaces
+   return (gs, as)
+
 actionItem :: Parsec.Parsec String () Expr.Item
-actionItem = Expr.Act <*> action
+actionItem = Expr.Act <$> action
 
 goalItem :: Parsec.Parsec String () Expr.Item
-goalItem = Expr.Gl <*> goal
+goalItem = Expr.Gl <$> goal
+
+characterItem :: Parsec.Parsec String () Expr.Item
+characterItem = Expr.Chr <$> character
 
 -- |Parser for an item (action, goal or character).
 item :: Parsec.Parsec String () Expr.Item
-item = Parsec.choice [actionItem, goalItem] -- , character]
---}
-
-{--
--- |Parser for a Character.
-character :: Parsec.Parsec String () Expr.Character
-character = undefined
-
+item = Parsec.choice [actionItem, goalItem, characterItem]
 
 -- |Parser for a program.
 -- |A program is a list of items (actions, goals and characters)
 program :: Parsec.Parsec String () Expr.Program
 program = Parsec.spaces *> Parsec.many (item <* Parsec.spaces)
---}
 
 parse :: Parsec.Stream s Identity t => Parsec.Parsec s () a -> s -> Maybe a
 parse p s = case (Parsec.parse p "(source)" s) of
