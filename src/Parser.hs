@@ -1,16 +1,18 @@
-{-# LANGUAGE FlexibleContexts #-}
-module Parser where
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGAUGE FlexibleContexts #-}
 
-import Control.Applicative
-import Data.Functor.Identity
+module Parser (parseFromFile, program, action, goal, character) where
 
-import qualified Text.Parsec as Parsec
-import qualified Text.Parsec.String as SParsec
-import System.Exit
-import System.IO (hPutStrLn, stderr)
+import           Control.Applicative
+import           Data.Functor.Identity
 
-import Data.Map (Map)
-import qualified Data.Map as Map
+import           System.Exit
+import           System.IO             (hPutStrLn, stderr)
+import qualified Text.Parsec           as Parsec
+import qualified Text.Parsec.String    as SParsec
+
+import           Data.Map              (Map)
+import qualified Data.Map              as Map
 
 import qualified Expr
 
@@ -66,8 +68,8 @@ comma = Parsec.char ','
 colon :: Parsec.Parsec String () Char
 colon = Parsec.char ':'
 
-trimmedP :: Parsec.Stream s m Char => Parsec.ParsecT s u m a -> Parsec.ParsecT s u m a
-trimmedP p = Parsec.spaces *> p <* Parsec.spaces
+trimmed :: Parsec.Stream s m Char => Parsec.ParsecT s u m a -> Parsec.ParsecT s u m a
+trimmed p = Parsec.spaces *> p <* Parsec.spaces
 
 braces :: Parsec.Stream s m Char => Parsec.ParsecT s u m a -> Parsec.ParsecT s u m a
 braces = Parsec.between (Parsec.string "{") (Parsec.string "}")
@@ -80,11 +82,11 @@ brackets = Parsec.between (Parsec.string "[") (Parsec.string "]")
 
 -- |Parser for a possibly empty list of something.
 list :: Parsec.Parsec String () a -> Parsec.Parsec String () [a]
-list p = brackets (p `Parsec.sepEndBy` (trimmedP comma))
+list p = brackets (p `Parsec.sepEndBy` (trimmed comma))
 
 -- |Parser for a non-empty list of something.
 nonEmptyList :: Parsec.Parsec String () a -> Parsec.Parsec String () [a]
-nonEmptyList p = brackets (p `Parsec.sepEndBy1` (trimmedP comma))
+nonEmptyList p = brackets (p `Parsec.sepEndBy1` (trimmed comma))
 
 mapP :: Parsec.Parsec String () a -> Parsec.Parsec String () [a]
 mapP p = braces (p `Parsec.sepEndBy` comma)
@@ -96,24 +98,20 @@ var = Parsec.many1 Parsec.letter
 -- | dictItem := variable ":" value
 dictItem :: Parsec.Parsec String () (String, Expr.Value)
 dictItem = do
-   Parsec.spaces
-   key <- var
-   Parsec.spaces
+   key <- trimmed var
    _ <- colon
-   Parsec.spaces
-   val <- value
-   Parsec.spaces
-   return (key, val) 
+   val <- trimmed value
+   return (key, val)
 
 -- |Parses a Dict (key-value collection).
 dict :: Parsec.Parsec String () (Map String Expr.Value)
 dict = Map.fromList <$> mapP dictItem
 
 preconditions :: Parsec.Parsec String () (Map String Expr.Value)
-preconditions = Parsec.string "pre" *> Parsec.spaces *> colon *> Parsec.spaces *> dict
+preconditions = Parsec.string "pre" *> trimmed colon *> dict
 
 effects :: Parsec.Parsec String () (Map String Expr.Value)
-effects = Parsec.string "post" *> Parsec.spaces *> colon *> Parsec.spaces *> dict
+effects = Parsec.string "post" *> trimmed colon *> dict
 
 -- >parseTest Parser.action "action Shoot { pre : {hasWeapon:true}, post : {enemyDamage: 10}}"
 -- Action {actionName = "Shoot", preconditions = Just (fromList [("hasWeapon",VBool True)]), effects = fromList [("enemyDamage",VInt 10)]}
@@ -121,21 +119,15 @@ effects = Parsec.string "post" *> Parsec.spaces *> colon *> Parsec.spaces *> dic
 action :: Parsec.Parsec String () Expr.Action
 action = do
    _ <- Parsec.string "action"
-   Parsec.spaces
-   name <- identifier
-   Parsec.spaces
+   name <- trimmed identifier
    (pre, post) <- braces actionBody
    return $ Expr.Action name pre post
- 
+
 actionBody :: Parsec.Parsec String () (Maybe (Map String Expr.Value), Map String Expr.Value)
 actionBody = do
-   Parsec.spaces
-   pre <- Parsec.optionMaybe preconditions
-   Parsec.spaces
+   pre <- trimmed (Parsec.optionMaybe preconditions)
    _ <- comma
-   Parsec.spaces
-   post <- effects
-   Parsec.spaces
+   post <- trimmed effects
    return (pre, post)
 
 -- |Parser for a Goal.
@@ -143,45 +135,40 @@ actionBody = do
 goal :: Parsec.Parsec String () Expr.Goal
 goal = do
    _ <- Parsec.string "goal"
-   Parsec.spaces
-   name <- identifier
-   Parsec.spaces
+   name <- trimmed identifier
    dic <- dict
    return $ Expr.Goal name dic
 
 goals :: Parsec.ParsecT String () Identity [String]
-goals = Parsec.string "goals" *> Parsec.spaces *> colon *> Parsec.spaces *> nonEmptyList identifier
+goals = Parsec.string "goals" *> trimmed colon *> nonEmptyList identifier
 
 actions :: Parsec.ParsecT String () Identity [String]
-actions = Parsec.string "actions" *> Parsec.spaces *> colon *> Parsec.spaces *> list identifier
+actions = Parsec.string "actions" *> trimmed colon *> list identifier
 
 -- |Parser for a Character.
 character :: Parsec.Parsec String () Expr.Character
 character = do
    _ <- Parsec.string "character"
-   Parsec.spaces
-   name <- identifier
-   Parsec.spaces
+   name <- trimmed identifier
    (gs, as) <- braces characterBody
    return $ Expr.Character name gs as
 
 characterBody :: Parsec.Parsec String () ([String],[String])
 characterBody = do
-   Parsec.spaces
-   gs <- goals
-   Parsec.spaces
+   gs <- trimmed goals
    _ <- comma
-   Parsec.spaces
-   as <- actions
-   Parsec.spaces
+   as <- trimmed actions
    return (gs, as)
 
+-- |Parser for a Expr.Act (Action).
 actionItem :: Parsec.Parsec String () Expr.Item
 actionItem = Expr.Act <$> action
 
+-- |Parser for a Expr.Gl (Goal).
 goalItem :: Parsec.Parsec String () Expr.Item
 goalItem = Expr.Gl <$> goal
 
+-- |Parser for a Expr.Chr (Character).
 characterItem :: Parsec.Parsec String () Expr.Item
 characterItem = Expr.Chr <$> character
 
@@ -192,12 +179,12 @@ item = Parsec.choice [actionItem, goalItem, characterItem]
 -- |Parser for a program.
 -- |A program is a list of items (actions, goals and characters)
 program :: Parsec.Parsec String () Expr.Program
-program = Parsec.spaces *> Parsec.many (item <* Parsec.spaces)
+program = Parsec.many (trimmed item)
 
 parse :: Parsec.Stream s Identity t => Parsec.Parsec s () a -> s -> Maybe a
-parse p s = case (Parsec.parse p "(source)" s) of
-   Left _ -> Nothing
-   Right x -> Just x     
+parse p s = case Parsec.parse p "(source)" s of
+   Left _  -> Nothing
+   Right x -> Just x
 
 parseFromFile :: SParsec.Parser a -> String -> IO a
 parseFromFile p fileName = SParsec.parseFromFile p fileName >>= either report return
