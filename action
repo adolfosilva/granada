@@ -1,0 +1,8 @@
+action Shoot {
+	pre: {
+      hasWeapon: true,
+      isAlive: true
+   },
+   post: { enemyDead: true }
+}
+

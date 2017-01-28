@@ -1,0 +1,5 @@
+goal KillEnemy {
+   enemyDead: true,
+   scoreBonus: 150
+}
+
