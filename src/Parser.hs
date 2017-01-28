@@ -1,5 +1,4 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGAUGE FlexibleContexts #-}
 
 module Parser (parseFromFile, program, action, goal, character) where
 
@@ -82,11 +81,11 @@ brackets = Parsec.between (Parsec.string "[") (Parsec.string "]")
 
 -- |Parser for a possibly empty list of something.
 list :: Parsec.Parsec String () a -> Parsec.Parsec String () [a]
-list p = brackets (p `Parsec.sepEndBy` (trimmed comma))
+list p = brackets (p `Parsec.sepEndBy` trimmed comma)
 
 -- |Parser for a non-empty list of something.
 nonEmptyList :: Parsec.Parsec String () a -> Parsec.Parsec String () [a]
-nonEmptyList p = brackets (p `Parsec.sepEndBy1` (trimmed comma))
+nonEmptyList p = brackets (p `Parsec.sepEndBy1` trimmed comma)
 
 mapP :: Parsec.Parsec String () a -> Parsec.Parsec String () [a]
 mapP p = braces (p `Parsec.sepEndBy` comma)

@@ -1,11 +1,16 @@
 action DrawWeapon {
-	pre: { }
-	post: { hasWeapon: true }
+	pre: { hasWeapon: true },
+   post: { drawnWeapon: true }
+}
+
+action LoadWeapon {
+   pre: { drawnWeapon: true},
+	post: { loadedWeapon: true }
 }
 
 action Attack {
 	pre: {
-      hasWeapon: true
+      loadedWeapon: true
    },
    post: { enemyDamage: 10 }
 }
