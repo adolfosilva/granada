@@ -8,6 +8,10 @@ As an example, let's imagine a small game, where...
 
 ## Using
 
+```sh
+> stack exec granada-exe examples/program.grd
+```
+
 ## Documentation
 
 ## License

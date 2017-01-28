@@ -71,13 +71,13 @@ trimmed :: Parsec.Stream s m Char => Parsec.ParsecT s u m a -> Parsec.ParsecT s 
 trimmed p = Parsec.spaces *> p <* Parsec.spaces
 
 braces :: Parsec.Stream s m Char => Parsec.ParsecT s u m a -> Parsec.ParsecT s u m a
-braces = Parsec.between (Parsec.string "{") (Parsec.string "}")
+braces = Parsec.between (Parsec.char '{') (Parsec.char '}')
 
 parens :: Parsec.Stream s m Char => Parsec.ParsecT s u m a -> Parsec.ParsecT s u m a
-parens = Parsec.between (Parsec.string "(") (Parsec.string ")")
+parens = Parsec.between (Parsec.char '(') (Parsec.char ')')
 
 brackets :: Parsec.Stream s m Char => Parsec.ParsecT s u m a -> Parsec.ParsecT s u m a
-brackets = Parsec.between (Parsec.string "[") (Parsec.string "]")
+brackets = Parsec.between (Parsec.char '[') (Parsec.char ']')
 
 -- |Parser for a possibly empty list of something.
 list :: Parsec.Parsec String () a -> Parsec.Parsec String () [a]
@@ -106,15 +106,7 @@ dictItem = do
 dict :: Parsec.Parsec String () (Map String Expr.Value)
 dict = Map.fromList <$> mapP dictItem
 
-preconditions :: Parsec.Parsec String () (Map String Expr.Value)
-preconditions = Parsec.string "pre" *> trimmed colon *> dict
-
-effects :: Parsec.Parsec String () (Map String Expr.Value)
-effects = Parsec.string "post" *> trimmed colon *> dict
-
--- >parseTest Parser.action "action Shoot { pre : {hasWeapon:true}, post : {enemyDamage: 10}}"
--- Action {actionName = "Shoot", preconditions = Just (fromList [("hasWeapon",VBool True)]), effects = fromList [("enemyDamage",VInt 10)]}
-
+-- |Parser for an Action.
 action :: Parsec.Parsec String () Expr.Action
 action = do
    _ <- Parsec.string "action"
@@ -129,6 +121,12 @@ actionBody = do
    post <- trimmed effects
    return (pre, post)
 
+preconditions :: Parsec.Parsec String () (Map String Expr.Value)
+preconditions = Parsec.string "pre" *> trimmed colon *> dict
+
+effects :: Parsec.Parsec String () (Map String Expr.Value)
+effects = Parsec.string "post" *> trimmed colon *> dict
+
 -- |Parser for a Goal.
 -- TODO: wrong definition
 goal :: Parsec.Parsec String () Expr.Goal
@@ -137,12 +135,6 @@ goal = do
    name <- trimmed identifier
    dic <- dict
    return $ Expr.Goal name dic
-
-goals :: Parsec.ParsecT String () Identity [String]
-goals = Parsec.string "goals" *> trimmed colon *> nonEmptyList identifier
-
-actions :: Parsec.ParsecT String () Identity [String]
-actions = Parsec.string "actions" *> trimmed colon *> list identifier
 
 -- |Parser for a Character.
 character :: Parsec.Parsec String () Expr.Character
@@ -158,6 +150,12 @@ characterBody = do
    _ <- comma
    as <- trimmed actions
    return (gs, as)
+
+goals :: Parsec.ParsecT String () Identity [String]
+goals = Parsec.string "goals" *> trimmed colon *> nonEmptyList identifier
+
+actions :: Parsec.ParsecT String () Identity [String]
+actions = Parsec.string "actions" *> trimmed colon *> list identifier
 
 -- |Parser for a Expr.Act (Action).
 actionItem :: Parsec.Parsec String () Expr.Item
@@ -179,11 +177,6 @@ item = Parsec.choice [actionItem, goalItem, characterItem]
 -- |A program is a list of items (actions, goals and characters)
 program :: Parsec.Parsec String () Expr.Program
 program = Parsec.many (trimmed item)
-
-parse :: Parsec.Stream s Identity t => Parsec.Parsec s () a -> s -> Maybe a
-parse p s = case Parsec.parse p "(source)" s of
-   Left _  -> Nothing
-   Right x -> Just x
 
 parseFromFile :: SParsec.Parser a -> String -> IO a
 parseFromFile p fileName = SParsec.parseFromFile p fileName >>= either report return
