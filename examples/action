@@ -1,5 +1,5 @@
 action Shoot {
-	pre: {
+   pre: {
       hasWeapon: true,
       isAlive: true
    },

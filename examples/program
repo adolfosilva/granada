@@ -1,15 +1,15 @@
 action DrawWeapon {
-	pre: { hasWeapon: true },
+   pre: { hasWeapon: true },
    post: { drawnWeapon: true }
 }
 
 action LoadWeapon {
    pre: { drawnWeapon: true},
-	post: { loadedWeapon: true }
+   post: { loadedWeapon: true }
 }
 
 action Attack {
-	pre: {
+   pre: {
       loadedWeapon: true
    },
    post: { enemyDamage: 10 }
@@ -21,6 +21,6 @@ goal KillEnemy {
 }
 
 character RedSoldier {
-	goals: [KillEnemy],
+   goals: [KillEnemy],
    actions: [Attack, LoadWeapon, DrawWeapon]
 }
