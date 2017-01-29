@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module GameAI (GameAI, ActionContext) where
+module Granada.GameAI (GameAI, ActionContext) where
 
 import Data.Dynamic
 import Data.Map

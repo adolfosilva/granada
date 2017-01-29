@@ -1,7 +1,7 @@
 module Main where
 
 import System.Environment
-import Parser (program, goal, action, character, parseFromFile)
+import Granada.Parser (program, goal, action, character, parseFromFile)
 
 main :: IO ()
 main = do

@@ -1,4 +1,4 @@
-module Expr where
+module Granada.Expr where
 
 import Data.Map (Map)
 

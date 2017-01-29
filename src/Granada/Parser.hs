@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Parser (parseFromFile, program, action, goal, character) where
+module Granada.Parser (parseFromFile, program, action, goal, character) where
 
 import           Control.Applicative
 import           Data.Functor.Identity
@@ -13,7 +13,7 @@ import qualified Text.Parsec.String    as SParsec
 import           Data.Map              (Map)
 import qualified Data.Map              as Map
 
-import qualified Expr
+import qualified Granada.Expr          as Expr
 
 -- Notes:
 -- Both defined in Control.Applicative
@@ -87,11 +87,12 @@ list p = brackets (p `Parsec.sepEndBy` trimmed comma)
 nonEmptyList :: Parsec.Parsec String () a -> Parsec.Parsec String () [a]
 nonEmptyList p = brackets (p `Parsec.sepEndBy1` trimmed comma)
 
+-- |Parser for a 'map'.
 mapP :: Parsec.Parsec String () a -> Parsec.Parsec String () [a]
 mapP p = braces (p `Parsec.sepEndBy` comma)
 
 var :: Parsec.Parsec String () String
-var = Parsec.many1 Parsec.letter
+var = Parsec.many1 Parsec.letter -- letter+
 
 -- |Parser for a dictItem.
 -- | dictItem := variable ":" value
@@ -117,7 +118,7 @@ action = do
 actionBody :: Parsec.Parsec String () (Maybe (Map String Expr.Value), Map String Expr.Value)
 actionBody = do
    pre <- trimmed (Parsec.optionMaybe preconditions)
-   _ <- comma
+   _ <- trimmed comma
    post <- trimmed effects
    return (pre, post)
 
