@@ -158,21 +158,9 @@ goals = Parsec.string "goals" *> trimmed colon *> nonEmptyList identifier
 actions :: Parsec.ParsecT String () Identity [String]
 actions = Parsec.string "actions" *> trimmed colon *> list identifier
 
--- |Parser for a Expr.Act (Action).
-actionItem :: Parsec.Parsec String () Expr.Item
-actionItem = Expr.Act <$> action
-
--- |Parser for a Expr.Gl (Goal).
-goalItem :: Parsec.Parsec String () Expr.Item
-goalItem = Expr.Gl <$> goal
-
--- |Parser for a Expr.Chr (Character).
-characterItem :: Parsec.Parsec String () Expr.Item
-characterItem = Expr.Chr <$> character
-
 -- |Parser for an item (action, goal or character).
 item :: Parsec.Parsec String () Expr.Item
-item = Parsec.choice [actionItem, goalItem, characterItem]
+item = Parsec.choice [Expr.Act <$> action, Expr.Gl <$> goal, Expr.Chr <$> character]
 
 -- |Parser for a program.
 -- |A program is a list of items (actions, goals and characters)
