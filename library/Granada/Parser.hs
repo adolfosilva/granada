@@ -53,8 +53,7 @@ value = boolean <|> integer
 
 -- |Parser for CamelCase strings.
 camelCaseString :: Parsec.Parsec String () String
-camelCaseString = undefined
---camelCaseString = (:) upper <*> lower
+camelCaseString = undefined --camelCaseString = (:) upper <*> lower
 
 identifier :: Parsec.Parsec String () String
 identifier = var -- TODO: camelCaseString
@@ -109,15 +108,15 @@ action :: Parsec.Parsec String () Expr.Action
 action = do
    _ <- Parsec.string "action"
    name <- trimmed identifier
-   (pre, post) <- braces actionBody
-   return $ Expr.Action name pre post
+   (pre, eff) <- braces actionBody
+   return $ Expr.Action name pre eff
 
 actionBody :: Parsec.Parsec String () (Maybe (Map String Expr.Value), Map String Expr.Value)
 actionBody = do
    pre <- trimmed (Parsec.optionMaybe preconditions)
    _ <- trimmed comma
-   post <- trimmed effects
-   return (pre, post)
+   eff <- trimmed effects
+   return (pre, eff)
 
 preconditions :: Parsec.Parsec String () (Map String Expr.Value)
 preconditions = Parsec.string "pre" *> trimmed colon *> dict
