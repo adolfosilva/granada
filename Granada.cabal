@@ -49,11 +49,10 @@ test-suite granada-tests
 
 benchmark granada-bench
   type:                exitcode-stdio-1.0
-  hs-source-dirs:      library, bench
+  hs-source-dirs:      bench
   main-is:             Main.hs
   build-depends:       base
                      , Granada
-                     , containers
                      , criterion
                      , parsec
   ghc-options:         -Wall -O2
