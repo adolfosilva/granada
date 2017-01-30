@@ -73,9 +73,6 @@ trimmed p = Parsec.spaces *> p <* Parsec.spaces
 braces :: Parsec.Stream s m Char => Parsec.ParsecT s u m a -> Parsec.ParsecT s u m a
 braces = Parsec.between (Parsec.char '{') (Parsec.char '}')
 
-parens :: Parsec.Stream s m Char => Parsec.ParsecT s u m a -> Parsec.ParsecT s u m a
-parens = Parsec.between (Parsec.char '(') (Parsec.char ')')
-
 brackets :: Parsec.Stream s m Char => Parsec.ParsecT s u m a -> Parsec.ParsecT s u m a
 brackets = Parsec.between (Parsec.char '[') (Parsec.char ']')
 
