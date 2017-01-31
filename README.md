@@ -2,6 +2,10 @@
 
 Granada is a domain-specific language ([DSL]) for Goal-Oriented Action Planning ([GOAP]).
 
+## What is GOAP?
+
+Goal-Oriented Action Planning is a planning architecture specifically designed for real-time control of autonomous character behavior in games.
+
 ## Example
 
 As an example, let's imagine a small game, where...
@@ -13,6 +17,12 @@ As an example, let's imagine a small game, where...
 ```
 
 ## Documentation
+
+```sh
+> stack haddock
+```
+
+.stack-work/install/x86_64-linux/lts-7.15/8.0.1/doc/index.html
 
 ## License
 
