@@ -1,4 +1,4 @@
-module Parser (benchmarks) where
+module Granada.Benchmarks.Parser (benchmarks) where
 
 import Criterion (Benchmark, bench, whnf)
 import Text.Parsec (parse)
