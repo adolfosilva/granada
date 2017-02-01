@@ -1,10 +1,10 @@
 module Granada.Benchmarks.Parser (benchmarks) where
 
-import Criterion (Benchmark, bench, whnf)
+import Criterion (Benchmark, bench, whnf, whnfIO)
 import Text.Parsec (parse)
 import qualified Text.Parsec.Error
 
-import Granada.Parser (action)
+import Granada.Parser (action, program, parseFromFile)
 import qualified Granada.Expr
 
 action01 :: String
@@ -15,4 +15,5 @@ actionParse01 = parse action "actionParse01"
 
 -- Our benchmark harness.
 benchmarks :: [Benchmark]
-benchmarks = [ bench "1"  $ whnf actionParse01 action01 ]
+benchmarks = [ bench "actionParse01"  $ whnf actionParse01 action01,
+               bench "parseFromFile program" $ whnfIO (parseFromFile program "examples/program.grd") ]
