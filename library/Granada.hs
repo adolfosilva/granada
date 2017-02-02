@@ -5,7 +5,7 @@ module Granada
      module Granada.Ast,
 ) where
 
-import Granada.Expr
-import Granada.Parser
-import Granada.GameAI
 import Granada.Ast
+import Granada.Expr
+import Granada.GameAI
+import Granada.Parser

@@ -1,10 +1,10 @@
 module Main where
 
-import System.Environment
-import Granada.Parser (program, goal, action, character, parseFromFile)
+import qualified Granada.Parser     as P
+import           System.Environment
 
 main :: IO ()
 main = do
    args <- getArgs
-   p <- parseFromFile program (args !! 0)
+   p <- P.parseFromFile P.program (args !! 0)
    print p
